@@ -8,9 +8,12 @@
 
 static SDL_Window *win = NULL;
 static SDL_Renderer *rend = NULL;
+static SDL_Texture *tx = NULL;
 static vpiHandle sig_clk = NULL;
 static vpiHandle sig_update = NULL;
 static vpiHandle sig_px = NULL;
+static int disp_w = 0;
+static int disp_h = 0;
 
 static int scope_has_net(vpiHandle scope, const char *net_name)
 {
@@ -67,6 +70,20 @@ static void add_cb(PLI_INT32 reason, PLI_INT32 (*fn)(p_cb_data), vpiHandle obj, 
     vpi_printf("VPI: failed to register callback %d\n", (int)reason);
 }
 
+static Uint32 bit_to_color(char ch)
+{
+  switch(ch)
+  {
+    case '1':
+    case 'H':
+      return 0xFFFFFF;
+    case '0':
+    case 'L':
+      return 0x000000;
+    default:
+      return 0xC00000;
+  }
+}
 
 static PLI_INT32 on_clock_edge(p_cb_data cb_data)
 {
@@ -87,14 +104,31 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
     char update_ch = update_val.value.str[0];
     if(update_ch == '1' || update_ch == 'H')
     {
-      for(int r = 0; r < 256; r++)
+      void *px;
+      int pitch;
+      if(SDL_LockTexture(tx, NULL, &px, &pitch))
       {
-        vpiHandle row = vpi_handle_by_index(sig_px, r);
-        s_vpi_value row_val = { .format = vpiBinStrVal };
-        vpi_get_value(row, &row_val);
-        vpi_printf("%s\n", row_val.value.str);
+        for(int r = 0; r < disp_h; r++)
+        {
+          vpiHandle row = vpi_handle_by_index(sig_px, r);
+          s_vpi_value row_val = { .format = vpiBinStrVal };
+          vpi_get_value(row, &row_val);
+          
+          const char *row_str = row_val.value.str;
+          if(row_str == NULL)
+            return -1;
+
+          Uint32 *dest = (Uint32*)((Uint8*)px + r*pitch);
+          for(int c = 0; c < disp_w; c++)
+            dest[c] = bit_to_color(row_str[disp_w - 1 - c]);
+        }
       }
-      vpi_printf("================================================================\n");
+      SDL_UnlockTexture(tx);
+
+      SDL_RenderClear(rend);
+      SDL_RenderTexture(rend, tx, NULL, NULL);
+      SDL_RenderPresent(rend);
+      SDL_Delay(100);
     }
   }
 
@@ -126,6 +160,11 @@ static PLI_INT32 on_start(p_cb_data cb)
     return -1;
   }
 
+  disp_w = vpi_get(vpiSize, vpi_handle_by_index(sig_px, 0));
+  disp_h = 0;
+  while(vpi_handle_by_index(sig_px, disp_h) != NULL)
+    disp_h++;
+
   add_cb(cbValueChange, on_clock_edge, sig_clk, NULL);
 
   if(!SDL_Init(SDL_INIT_VIDEO))
@@ -142,6 +181,10 @@ static PLI_INT32 on_start(p_cb_data cb)
   }
 
   SDL_SetRenderVSync(rend, 1);
+
+  tx = SDL_CreateTexture(rend, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, disp_w, disp_h);
+  SDL_SetTextureScaleMode(tx, SDL_SCALEMODE_NEAREST);
+  SDL_SetRenderLogicalPresentation(rend, disp_w, disp_h, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
   return 0;
 }
