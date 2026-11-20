@@ -72,16 +72,30 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
 {
   static char prev = 'U';
 
-  s_vpi_value v = { .format = vpiBinStrVal };
-  vpi_get_value(cb_data->obj, &v);
+  s_vpi_value clk_val = { .format = vpiBinStrVal };
+  vpi_get_value(cb_data->obj, &clk_val);
 
-  char now = v.value.str[0];
+  char now = clk_val.value.str[0];
   int rising = (prev == '0' || prev == 'L') && (now == '1' || now == 'H');
   prev = now;
 
   if(rising)
   {
-    
+    s_vpi_value update_val = { .format = vpiBinStrVal };
+    vpi_get_value(sig_update, &update_val);
+
+    char update_ch = update_val.value.str[0];
+    if(update_ch == '1' || update_ch == 'H')
+    {
+      for(int r = 0; r < 256; r++)
+      {
+        vpiHandle row = vpi_handle_by_index(sig_px, r);
+        s_vpi_value row_val = { .format = vpiBinStrVal };
+        vpi_get_value(row, &row_val);
+        vpi_printf("%s\n", row_val.value.str);
+      }
+      vpi_printf("================================================================\n");
+    }
   }
 
   return 0;

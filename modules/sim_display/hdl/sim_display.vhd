@@ -19,7 +19,11 @@ end entity sim_display;
 
 architecture sim_display_arch of sim_display is
 
-  signal px_q     : t_slv_arr(0 to G_HEIGHT-1)(G_WIDTH-1 downto 0);
+  subtype t_row is std_logic_vector(G_WIDTH-1 downto 0);
+
+  type t_display is array (0 to G_HEIGHT-1) of t_row;
+
+  signal px_q     : t_display;
   signal update_q : std_logic;
 
   signal vpi_tag_sim_display : std_logic := '0';
@@ -36,7 +40,10 @@ begin
 
       else
 
-        px_q     <= px;
+        --had to do this to avoid GHDL typing complaints
+        for i in 0 to G_HEIGHT-1 loop
+          px_q(i) <= px(i);
+        end loop;
         update_q <= update;
 
       end if;
