@@ -7,6 +7,7 @@ analyze::
                                   $(CROWLIB_PATH)/modules/sim_display/hdl/sim_display.vhd
 
 plugins:
+	copy /Y "$(subst /,\,$(SDL_PATH)/bin/SDL3.dll)" .
 	ghdl --vpi-compile gcc -I$(SDL_PATH)/include \
                          -c $(CROWLIB_PATH)/plugins/sim_display/sim_display.c \
                          -o sim_display.o

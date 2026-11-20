@@ -34,4 +34,48 @@ package common_pkg is
 
   type t_time_arr is array (natural range <>) of time;
 
+  function f_count_ones_slv (
+    slv : std_logic_vector
+  ) return natural;
+
+  function f_count_ones_uns (
+    uns : unsigned
+  ) return natural;
+
+  function f_count_ones_sgn (
+    sgn : signed
+  ) return natural;
+
 end package common_pkg;
+
+package body common_pkg is
+
+  function f_count_ones_slv (
+    slv : std_logic_vector
+  ) return natural is
+    variable count : natural := 0;
+  begin
+    for i in slv'range loop
+      if(slv(i) = '1') then
+        count := count + 1;
+      end if;
+    end loop;
+
+    return count;
+  end function f_count_ones_slv;
+
+  function f_count_ones_uns (
+    uns : unsigned
+  ) return natural is
+  begin
+    return f_count_ones_slv(std_logic_vector(uns));
+  end function f_count_ones_uns;
+
+  function f_count_ones_sgn (
+    sgn : signed
+  ) return natural is
+  begin
+    return f_count_ones_slv(std_logic_vector(sgn));
+  end function f_count_ones_sgn;
+
+end package body common_pkg;
