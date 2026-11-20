@@ -9,6 +9,7 @@
 static SDL_Window *win = NULL;
 static SDL_Renderer *rend = NULL;
 static SDL_Texture *tx = NULL;
+static vpiHandle sig_sim_display = NULL;
 static vpiHandle sig_clk = NULL;
 static vpiHandle sig_update = NULL;
 static vpiHandle sig_px = NULL;
@@ -128,6 +129,18 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
       SDL_RenderClear(rend);
       SDL_RenderTexture(rend, tx, NULL, NULL);
       SDL_RenderPresent(rend);
+
+      SDL_Event e;
+      while(SDL_PollEvent(&e))
+      {
+        if(e.type == SDL_EVENT_QUIT)
+        {
+          s_vpi_value val = { .format = vpiBinStrVal };
+          val.value.str = "0";
+          vpi_put_value(sig_sim_display, &val, NULL, vpiNoDelay);
+        }
+      }
+
       SDL_Delay(100);
     }
   }
@@ -147,6 +160,8 @@ static PLI_INT32 on_start(p_cb_data cb)
   }
 
   char path[1024];
+  snprintf(path, sizeof(path), "%s.vpi_tag_sim_display", vpi_get_str(vpiFullName, disp_inst));
+  sig_sim_display = vpi_handle_by_name(path, NULL);
   snprintf(path, sizeof(path), "%s.clk", vpi_get_str(vpiFullName, disp_inst));
   sig_clk = vpi_handle_by_name(path, NULL);
   snprintf(path, sizeof(path), "%s.update_q", vpi_get_str(vpiFullName, disp_inst));
@@ -154,7 +169,7 @@ static PLI_INT32 on_start(p_cb_data cb)
   snprintf(path, sizeof(path), "%s.px_q", vpi_get_str(vpiFullName, disp_inst));
   sig_px = vpi_handle_by_name(path, NULL);
 
-  if(sig_clk == NULL || sig_update == NULL || sig_px == NULL)
+  if(sig_sim_display == NULL || sig_clk == NULL || sig_update == NULL || sig_px == NULL)
   {
     vpi_printf("COuld not find all sim_display signals.\n");
     return -1;

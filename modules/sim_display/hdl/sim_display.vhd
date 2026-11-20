@@ -2,6 +2,7 @@ library ieee;
   use ieee.std_logic_1164.all;
 library crowlib;
   use crowlib.common_pkg.all;
+use std.env.finish;
 
 entity sim_display is
   generic (
@@ -26,11 +27,17 @@ architecture sim_display_arch of sim_display is
   signal px_q     : t_display;
   signal update_q : std_logic;
 
-  signal vpi_tag_sim_display : std_logic := '0';
+  signal vpi_tag_sim_display : std_logic := '1';
 
 begin
 
-  s_regs : process(all)
+  process
+  begin
+    wait until vpi_tag_sim_display = '0';
+    finish;
+  end process;
+
+  s_regs : process(clk)
   begin
     if(rising_edge(clk)) then
       if(rst = '1') then
