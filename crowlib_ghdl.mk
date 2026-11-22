@@ -6,7 +6,8 @@ analyze::
 	ghdl -a --std=08 --work=crowlib $(CROWLIB_PATH)/packages/common_pkg.vhd \
                                   $(CROWLIB_PATH)/packages/display_pkg.vhd \
                                   $(CROWLIB_PATH)/modules/clk_and_rst/hdl/clk_and_rst.vhd \
-                                  $(CROWLIB_PATH)/modules/sim_display/hdl/sim_display.vhd
+                                  $(CROWLIB_PATH)/modules/sim_display/hdl/sim_display.vhd \
+                                  $(CROWLIB_PATH)/modules/sim_display/hdl/sim_display_bw.vhd
 
 plugins:
 	copy /Y "$(subst /,\,$(SDL_PATH)/bin/SDL3.dll)" .
