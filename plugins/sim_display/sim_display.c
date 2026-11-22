@@ -6,6 +6,9 @@
 
 #include "SDL3/SDL.h"
 
+#define TARGET_FPS (60)
+#define FRAME_MS   (1000 / TARGET_FPS)
+
 static SDL_Window *win = NULL;
 static SDL_Renderer *rend = NULL;
 static SDL_Texture *tx = NULL;
@@ -76,15 +79,16 @@ static Uint32 px_to_color(const char *px)
   int clr = 0;
   for(int i = 0; i < 32; i++)
   {
+    clr = clr << 1;
     if(px[i] == '1' || px[i] == 'H')
       clr |= 1;
-    clr = clr << 1;
   }
   return clr >> 8; //Drop alpha
 }
 
 static PLI_INT32 on_clock_edge(p_cb_data cb_data)
 {
+  static Uint64 last_frame = 0;
   static char prev = 'U';
 
   s_vpi_value clk_val = { .format = vpiBinStrVal };
@@ -102,6 +106,11 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
     char update_ch = update_val.value.str[0];
     if(update_ch == '1' || update_ch == 'H')
     {
+      Uint64 time = SDL_GetTicks();
+      if((time - last_frame) < FRAME_MS)
+        SDL_Delay(FRAME_MS - (time - last_frame));
+      last_frame = time;
+
       void *px;
       int pitch;
       if(SDL_LockTexture(tx, NULL, &px, &pitch))
@@ -139,8 +148,6 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
           vpi_put_value(sig_sim_display, &val, NULL, vpiNoDelay);
         }
       }
-
-      SDL_Delay(50);
     }
   }
 
@@ -194,7 +201,7 @@ static PLI_INT32 on_start(p_cb_data cb)
     return -1;
   }
 
-  SDL_SetRenderVSync(rend, 1);
+  SDL_SetRenderVSync(rend, 0);
 
   tx = SDL_CreateTexture(rend, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, disp_w, disp_h);
   SDL_SetTextureScaleMode(tx, SDL_SCALEMODE_NEAREST);
