@@ -5,10 +5,12 @@ library crowlib;
 
 entity cellular_automata_grid is
   generic (
-    G_WIDTH       : natural := 256;
-    G_HEIGHT      : natural := 256;
-    G_STATE_WIDTH : natural := 1;
-    G_INIT        : t_slv_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1)(G_STATE_WIDTH-1 downto 0)
+    G_WIDTH        : natural                                                                 := 256;
+    G_HEIGHT       : natural                                                                 := 256;
+    G_STATE_WIDTH  : natural                                                                 := 1;
+    G_INIT         : t_slv_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1)(G_STATE_WIDTH-1 downto 0) := (others => (others => (others => '0')));
+    G_CONFIG_WIDTH : positive                                                                := 1;
+    G_CONFIG       : std_logic_vector(G_CONFIG_WIDTH-1 downto 0)                             := (others => '0')
   );
   port (
     clk    : in  std_logic;
@@ -22,7 +24,8 @@ architecture cellular_automata_grid_arch of cellular_automata_grid is
 
   component cellular_automata_cell is
     generic (
-      G_INIT : std_logic_vector(G_STATE_WIDTH-1 downto 0) := (others => '0')
+      G_INIT   : std_logic_vector(G_STATE_WIDTH-1 downto 0)  := (others => '0');
+      G_CONFIG : std_logic_vector(G_CONFIG_WIDTH-1 downto 0) := (others => '0')
     );
     port (
       clk   : in  std_logic;

@@ -77,6 +77,12 @@ package common_pkg is
 
   type t_time_arr is array (natural range <>) of time;
 
+  function f_rand_slv (
+    width : natural;
+    seed  : positive;
+    salt  : positive
+  ) return std_logic_vector;
+
   function f_count_ones_slv (
     slv : std_logic_vector
   ) return natural;
@@ -92,6 +98,28 @@ package common_pkg is
 end package common_pkg;
 
 package body common_pkg is
+
+  function f_rand_slv (
+    width : natural;
+    seed  : positive;
+    salt  : positive
+  ) return std_logic_vector is
+    variable s1    : positive                           := seed; -- Not sure why I have to do this
+    variable s2    : positive                           := salt; -- Not sure why I have to do this
+    variable r     : real                               := 0.0;
+    variable rand  : std_logic_vector(width-1 downto 0) := (others => '0');
+  begin
+    for i in 0 to 15 loop
+      uniform(s1, s2, r);
+    end loop;
+    
+    for i in 0 to width-1 loop
+      uniform(s1, s2, r);
+      rand(i) := '1' when r < 0.5 else '0';
+    end loop;
+    
+    return rand;
+  end function f_rand_slv;
 
   function f_count_ones_slv (
     slv : std_logic_vector
