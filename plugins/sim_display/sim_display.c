@@ -141,7 +141,7 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
         }
       }
 
-      SDL_Delay(100);
+      SDL_Delay(50);
     }
   }
 
