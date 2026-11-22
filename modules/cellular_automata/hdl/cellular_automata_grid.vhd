@@ -22,7 +22,7 @@ architecture cellular_automata_grid_arch of cellular_automata_grid is
 
   component cellular_automata_cell is
     generic (
-      G_STATE_WIDTH : natural := 1
+      G_INIT : std_logic_vector(G_STATE_WIDTH-1 downto 0) := (others => '0')
     );
     port (
       clk   : in  std_logic;
@@ -58,7 +58,7 @@ begin
     gen_cols : for c in 0 to G_WIDTH-1 generate
       u_cell : cellular_automata_cell
         generic map (
-          G_STATE_WIDTH => G_STATE_WIDTH
+          G_INIT => G_INIT(r)(c)
         )
         port map (
           clk   => clk,
