@@ -61,9 +61,11 @@ package display_pkg is
 
   type t_color_arr      is array (natural range <>) of t_color;
   type t_color_real_arr is array (natural range <>) of t_color_real;
+  type t_color_slv_arr  is array (natural range <>) of t_color_slv;
 
   type t_color_arr_2d      is array (natural range <>) of t_color_arr;
   type t_color_real_arr_2d is array (natural range <>) of t_color_real_arr;
+  type t_color_slv_arr_2d  is array (natural range <>) of t_color_slv_arr;
 
   function f_color_to_slv(
     clr : t_color
@@ -119,6 +121,7 @@ package body display_pkg is
     clr.g := to_unsigned(integer(round(clr_real.g)), K_BYTE_WIDTH);
     clr.b := to_unsigned(integer(round(clr_real.b)), K_BYTE_WIDTH);
     clr.a := to_unsigned(integer(round(clr_real.a)), K_BYTE_WIDTH);
+    return clr;
   end function f_color_real_to_color;
 
   function f_blend_color(
@@ -129,9 +132,9 @@ package body display_pkg is
     variable clr   : t_color_real := K_COLOR_REAL_DEFAULT;
   begin
     alpha := real(to_integer(fg.a))/real(K_BYTE_UNS_MAX);
-    clr.r := real(to_integer(fg.r))*(1.0 - alpha) + real(to_integer(bg.r))*alpha;
-    clr.g := real(to_integer(fg.g))*(1.0 - alpha) + real(to_integer(bg.g))*alpha;
-    clr.b := real(to_integer(fg.b))*(1.0 - alpha) + real(to_integer(bg.b))*alpha;
+    clr.r := real(to_integer(fg.r))*alpha + real(to_integer(bg.r))*(1.0-alpha);
+    clr.g := real(to_integer(fg.g))*alpha + real(to_integer(bg.g))*(1.0-alpha);
+    clr.b := real(to_integer(fg.b))*alpha + real(to_integer(bg.b))*(1.0-alpha);
     clr.a := 1.0;
 
     return f_color_real_to_color(clr);

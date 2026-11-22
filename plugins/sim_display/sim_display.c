@@ -71,19 +71,16 @@ static void add_cb(PLI_INT32 reason, PLI_INT32 (*fn)(p_cb_data), vpiHandle obj, 
     vpi_printf("VPI: failed to register callback %d\n", (int)reason);
 }
 
-static Uint32 bit_to_color(char ch)
+static Uint32 px_to_color(const char *px)
 {
-  switch(ch)
+  int clr = 0;
+  for(int i = 0; i < 32; i++)
   {
-    case '1':
-    case 'H':
-      return 0xFFFFFF;
-    case '0':
-    case 'L':
-      return 0x000000;
-    default:
-      return 0xC00000;
+    if(px[i] == '1' || px[i] == 'H')
+      clr |= 1;
+    clr = clr << 1;
   }
+  return clr >> 8; //Drop alpha
 }
 
 static PLI_INT32 on_clock_edge(p_cb_data cb_data)
@@ -117,14 +114,16 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
           
           const char *row_str = row_val.value.str;
           if(row_str == NULL)
-            return -1;
+            goto unlock;
 
           Uint32 *dest = (Uint32*)((Uint8*)px + r*pitch);
           for(int c = 0; c < disp_w; c++)
-            dest[c] = bit_to_color(row_str[disp_w - 1 - c]);
+            dest[c] = px_to_color(&row_str[(disp_w - 1 - c) * 32]);
         }
+
+        unlock:
+        SDL_UnlockTexture(tx);
       }
-      SDL_UnlockTexture(tx);
 
       SDL_RenderClear(rend);
       SDL_RenderTexture(rend, tx, NULL, NULL);
@@ -166,7 +165,7 @@ static PLI_INT32 on_start(p_cb_data cb)
   sig_clk = vpi_handle_by_name(path, NULL);
   snprintf(path, sizeof(path), "%s.update_q", vpi_get_str(vpiFullName, disp_inst));
   sig_update = vpi_handle_by_name(path, NULL);
-  snprintf(path, sizeof(path), "%s.px_q", vpi_get_str(vpiFullName, disp_inst));
+  snprintf(path, sizeof(path), "%s.vpi_px", vpi_get_str(vpiFullName, disp_inst));
   sig_px = vpi_handle_by_name(path, NULL);
 
   if(sig_sim_display == NULL || sig_clk == NULL || sig_update == NULL || sig_px == NULL)
@@ -175,7 +174,7 @@ static PLI_INT32 on_start(p_cb_data cb)
     return -1;
   }
 
-  disp_w = vpi_get(vpiSize, vpi_handle_by_index(sig_px, 0));
+  disp_w = vpi_get(vpiSize, vpi_handle_by_index(sig_px, 0)) / 32;
   disp_h = 0;
   while(vpi_handle_by_index(sig_px, disp_h) != NULL)
     disp_h++;
