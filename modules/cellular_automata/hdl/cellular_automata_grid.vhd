@@ -59,7 +59,7 @@ begin
 
   gen_rows : for r in 0 to G_HEIGHT-1 generate
     gen_cols : for c in 0 to G_WIDTH-1 generate
-      
+
       u_cell : cellular_automata_cell
         generic map (
           G_INIT   => G_INIT(r)(c),
@@ -99,7 +99,7 @@ begin
       for c in 0 to G_WIDTH-1 loop
 
         n (r)(c) <= states((r-1) mod G_HEIGHT)(c);
-        ne(r)(c) <= states((r-1) mod G_HEIGHT)((c-1) mod G_WIDTH);
+        ne(r)(c) <= states((r-1) mod G_HEIGHT)((c+1) mod G_WIDTH);
         e (r)(c) <= states(r                 )((c+1) mod G_WIDTH);
         se(r)(c) <= states((r+1) mod G_HEIGHT)((c+1) mod G_WIDTH);
         s (r)(c) <= states((r+1) mod G_HEIGHT)(c);

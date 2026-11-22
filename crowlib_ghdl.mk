@@ -5,6 +5,7 @@ GCC ?= C:/msys64/ucrt64/bin/gcc.exe
 analyze::
 	ghdl -a --std=08 --work=crowlib $(CROWLIB_PATH)/packages/common_pkg.vhd                                  \
                                   $(CROWLIB_PATH)/packages/display_pkg.vhd                                 \
+                                  $(CROWLIB_PATH)/packages/sim_pkg.vhd                                     \
 																	$(CROWLIB_PATH)/modules/cellular_automata/hdl/cellular_automata_grid.vhd \
                                   $(CROWLIB_PATH)/modules/clk_and_rst/hdl/clk_and_rst.vhd                  \
                                   $(CROWLIB_PATH)/modules/sim_display/hdl/sim_display.vhd                  \
