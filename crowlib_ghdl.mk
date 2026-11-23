@@ -1,5 +1,5 @@
 CROWLIB_PATH ?= .
-SDL_PATH ?= C:/Users/jonat/Documents/gamedev/libraries/SDL/install
+SDL_PATH ?= C:/SDL/install
 GCC ?= C:/msys64/ucrt64/bin/gcc.exe
 
 analyze::
