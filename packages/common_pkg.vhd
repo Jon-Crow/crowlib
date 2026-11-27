@@ -52,6 +52,15 @@ package common_pkg is
   type t_dword_sgn_arr is array (natural range <>) of t_dword_sgn;
   type t_qword_sgn_arr is array (natural range <>) of t_qword_sgn;
 
+  type t_slv_arr is array (natural range <>) of std_logic_vector;
+  type t_uns_arr is array (natural range <>) of unsigned;
+  type t_sgn_arr is array (natural range <>) of signed;
+
+  type t_int_array is array (natural range <>) of integer;
+  type t_nat_array is array (natural range <>) of natural;
+  type t_pos_array is array (natural range <>) of positive;
+  type t_time_arr  is array (natural range <>) of time;
+
   type t_byte_arr_2d  is array (natural range <>) of t_byte_arr;
   type t_word_arr_2d  is array (natural range <>) of t_word_arr;
   type t_dword_arr_2d is array (natural range <>) of t_dword_arr;
@@ -67,15 +76,14 @@ package common_pkg is
   type t_dword_sgn_arr_2d is array (natural range <>) of t_dword_sgn_arr;
   type t_qword_sgn_arr_2d is array (natural range <>) of t_qword_sgn_arr;
 
-  type t_slv_arr is array (natural range <>) of std_logic_vector;
-  type t_uns_arr is array (natural range <>) of unsigned;
-  type t_sgn_arr is array (natural range <>) of signed;
-
   type t_slv_arr_2d is array (natural range <>) of t_slv_arr;
   type t_uns_arr_2d is array (natural range <>) of t_uns_arr;
   type t_sgn_arr_2d is array (natural range <>) of t_sgn_arr;
 
-  type t_time_arr is array (natural range <>) of time;
+  type t_int_array_2d is array (natural range <>) of t_int_array;
+  type t_nat_array_2d is array (natural range <>) of t_nat_array;
+  type t_pos_array_2d is array (natural range <>) of t_pos_array;
+  type t_time_arr_2d  is array (natural range <>) of t_time_arr;
 
   function f_rand_slv (
     width : natural;

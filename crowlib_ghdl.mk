@@ -8,8 +8,9 @@ analyze::
                                   $(CROWLIB_PATH)/packages/sim_pkg.vhd                                     \
 																	$(CROWLIB_PATH)/modules/cellular_automata/hdl/cellular_automata_grid.vhd \
                                   $(CROWLIB_PATH)/modules/clk_and_rst/hdl/clk_and_rst.vhd                  \
-                                  $(CROWLIB_PATH)/modules/sim_display/hdl/sim_display.vhd                  \
-                                  $(CROWLIB_PATH)/modules/sim_display/hdl/sim_display_bw.vhd
+                                  $(CROWLIB_PATH)/modules/display/vga_master/hdl/vga_master.vhd            \
+                                  $(CROWLIB_PATH)/modules/display/sim_display/hdl/sim_display.vhd          \
+                                  $(CROWLIB_PATH)/modules/display/sim_display/hdl/sim_display_bw.vhd
 
 plugins:
 	copy /Y "$(subst /,\,$(SDL_PATH)/bin/SDL3.dll)" .
