@@ -3,7 +3,7 @@ CROWLIB_PATH ?= ../../../..
 include $(CROWLIB_PATH)/crowlib_ghdl.mk
 
 clean:
-	del *.cf *.fst *.o *.exe *.vpi *.dll
+	del *.cf *.ghw *.o *.exe *.vpi *.dll
 
 analyze::
 	ghdl -a --std=08 tx_header_tb.vhd

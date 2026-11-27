@@ -7,11 +7,11 @@ analyze::
                                   $(CROWLIB_PATH)/modules/display/display_pkg.vhd                               \
                                   $(CROWLIB_PATH)/modules/network/network_pkg.vhd                               \
                                   $(CROWLIB_PATH)/modules/sim_utils/sim_pkg.vhd                                 \
-																	$(CROWLIB_PATH)/modules/misc/cellular_automata/hdl/cellular_automata_grid.vhd \
                                   $(CROWLIB_PATH)/modules/sim_utils/clk_and_rst/hdl/clk_and_rst.vhd             \
+                                  $(CROWLIB_PATH)/modules/sim_utils/sim_display/hdl/sim_display.vhd             \
+                                  $(CROWLIB_PATH)/modules/sim_utils/sim_display/hdl/sim_display_bw.vhd          \
+                                  $(CROWLIB_PATH)/modules/misc/cellular_automata/hdl/cellular_automata_grid.vhd \
                                   $(CROWLIB_PATH)/modules/display/vga_master/hdl/vga_master.vhd                 \
-                                  $(CROWLIB_PATH)/modules/display/sim_display/hdl/sim_display.vhd               \
-                                  $(CROWLIB_PATH)/modules/display/sim_display/hdl/sim_display_bw.vhd            \
                                   $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_header.vhd                   \
                                   $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_eth2_header.vhd              \
                                   $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_ipv4_header.vhd              \
