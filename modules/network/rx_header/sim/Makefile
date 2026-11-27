@@ -1,4 +1,4 @@
-CROWLIB_PATH ?= ../../../../
+CROWLIB_PATH ?= ../../../..
 
 HEADER_BYTES ?= 8
 

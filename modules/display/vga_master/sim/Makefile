@@ -1,4 +1,4 @@
-CROWLIB_PATH ?= ../../../../
+CROWLIB_PATH ?= ../../../..
 
 WIDTH         ?= 320
 HEIGHT        ?= 400

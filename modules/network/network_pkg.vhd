@@ -30,6 +30,7 @@ package network_pkg is
   constant K_ETH2_HEADER_DEFAULT : t_eth2_header := (others => (others => '0'));
 
   constant K_ETH2_HEADER_WIDTH : natural := 2*K_MAC_ADDRESS_WIDTH + K_ETH2_TYPE_WIDTH;
+  constant K_ETH2_HEADER_BYTES : natural := K_ETH2_HEADER_WIDTH/K_BYTE_WIDTH;
 
   subtype t_eth2_header_slv is std_logic_vector(K_ETH2_HEADER_WIDTH-1 downto 0);
 
@@ -98,6 +99,7 @@ package network_pkg is
                                             K_IPV4_PROTOCOL_WIDTH        +
                                             K_IPV4_CHECKSUM_WIDTH        +
                                             2*K_IP_ADDRESS_WIDTH;
+  constant K_IPV4_HEADER_BYTES : natural := K_IPV4_HEADER_WIDTH/K_BYTE_WIDTH;
 
   subtype t_ipv4_header_slv is std_logic_vector(K_IPV4_HEADER_WIDTH-1 downto 0);
 
@@ -127,11 +129,12 @@ package network_pkg is
 
   constant K_UDP_HEADER_DEFAULT : t_udp_header := (others => (others => '0'));
 
-  constant K_UDP_HEADER_LENGTH : natural := K_UDP_LENGTH_WIDTH   +
-                                            K_UDP_CHECKSUM_WIDTH +
-                                            2*K_NET_PORT_WIDTH;
+  constant K_UDP_HEADER_WIDTH : natural := K_UDP_LENGTH_WIDTH   +
+                                           K_UDP_CHECKSUM_WIDTH +
+                                           2*K_NET_PORT_WIDTH;
+  constant K_UDP_HEADER_BYTES : natural := K_UDP_HEADER_WIDTH/K_BYTE_WIDTH;
 
-  subtype t_udp_header_slv is std_logic_vector(K_UDP_HEADER_LENGTH-1 downto 0);
+  subtype t_udp_header_slv is std_logic_vector(K_UDP_HEADER_WIDTH-1 downto 0);
 
   function f_udp_header_to_slv(
     hdr : t_udp_header
