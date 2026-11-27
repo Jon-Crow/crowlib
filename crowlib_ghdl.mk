@@ -16,10 +16,12 @@ analyze::
                                   $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_eth2_header.vhd              \
                                   $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_ipv4_header.vhd              \
                                   $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_udp_header.vhd               \
+                                  $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_dhcp_header.vhd              \
                                   $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_header.vhd                   \
                                   $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_eth2_header.vhd              \
                                   $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_ipv4_header.vhd              \
-                                  $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_udp_header.vhd
+                                  $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_udp_header.vhd               \
+                                  $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_dhcp_header.vhd
 
 plugins:
 	copy /Y "$(subst /,\,$(SDL_PATH)/bin/SDL3.dll)" .
