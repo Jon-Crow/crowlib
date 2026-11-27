@@ -11,7 +11,8 @@ analyze::
                                   $(CROWLIB_PATH)/modules/sim_utils/clk_and_rst/hdl/clk_and_rst.vhd             \
                                   $(CROWLIB_PATH)/modules/display/vga_master/hdl/vga_master.vhd                 \
                                   $(CROWLIB_PATH)/modules/display/sim_display/hdl/sim_display.vhd               \
-                                  $(CROWLIB_PATH)/modules/display/sim_display/hdl/sim_display_bw.vhd
+                                  $(CROWLIB_PATH)/modules/display/sim_display/hdl/sim_display_bw.vhd            \
+                                  $(CROWLIB_PATH)/modules/network/rx_header/hdl/rx_header.vhd
 
 plugins:
 	copy /Y "$(subst /,\,$(SDL_PATH)/bin/SDL3.dll)" .
