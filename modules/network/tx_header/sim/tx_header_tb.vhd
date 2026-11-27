@@ -12,6 +12,9 @@ end entity tx_header_tb;
 
 architecture tx_header_tb_arch of tx_header_tb is
 
+  constant K_MAC_ADDRESS : t_mac_addr := x"FC9D050293FA";
+  constant K_PACKET_DATA : t_byte_arr := f_hex_file_read("dhcp_packet.txt");
+
   signal clk                 : std_logic;
   signal rst                 : std_logic;
 
@@ -49,10 +52,52 @@ begin
 
   dhcp_data_out_ready <= '1';
 
-  eth2_header_in <= K_ETH2_HEADER_DEFAULT;
-  ipv4_header_in <= K_IPV4_HEADER_DEFAULT;
-  udp_header_in  <= K_UDP_HEADER_DEFAULT;
-  dhcp_header_in <= K_DHCP_HEADER_DEFAULT;
+  eth2_header_in <= (
+    dst_addr => x"FFFFFFFFFFFF",
+    src_addr => K_MAC_ADDRESS,
+    eth_type => K_ETH2_TYPE_IPV4
+  );
+
+  ipv4_header_in <= (
+    version   => x"4",
+    hdr_len   => x"5",
+    dscp      => (others => '0'),
+    ecn       => (others => '0'),
+    total_len => x"0148",
+    id        => x"D41E",
+    flags     => (others => '0'),
+    frag_off  => (others => '0'),
+    ttl       => x"80",
+    protocol  => K_IPV4_PROTOCOL_UDP,
+    checksum  => (others => '0'),
+    src_addr  => (others => '0'),
+    dst_addr  => (others => '1')
+  );
+
+  udp_header_in  <= (
+    src_port => x"0044",
+    dst_port => x"0043",
+    length   => x"0134",
+    checksum => x"F236"
+  );
+
+  dhcp_header_in <= (
+    msg_type    => x"01",
+    hw_type     => x"01",
+    hw_addr_len => x"06",
+    hops        => (others => '0'),
+    trans_id    => x"D8FA822B",
+    secs        => (others => '0'),
+    flags       => (others => '0'),
+    client_ip   => (others => '0'),
+    your_ip     => (others => '0'),
+    server_ip   => (others => '0'),
+    relay_ip    => (others => '0'),
+    client_addr => (R_DHCP_CLIENT_ADDRESS_MAC => K_MAC_ADDRESS, R_DHCP_CLIENT_ADDRESS_MAC_PAD => '0'),
+    server_name => (others => '0'),
+    boot_name   => (others => '0'),
+    cookie      => K_DHCP_MAGIC_COOKIE_DEFAULT
+  );
 
   process
   begin
@@ -63,26 +108,30 @@ begin
   end process;
 
   process
+    variable pkt_idx : natural := 0;
   begin
+    wait until falling_edge(rst);
+
     data_in       <= (others => '0');
     data_in_valid <= '0';
     data_in_last  <= '0';
-
-    wait until falling_edge(rst);
 
     for i in 0 to 31 loop
       wait until rising_edge(clk);
     end loop;
 
-    data_in       <= x"55";
     data_in_valid <= '1';
 
-    wait until rising_edge(clk) and data_in_ready = '1';
-
-    data_in       <= x"AA";
-    data_in_last  <= '1';
-
-    wait until rising_edge(clk) and data_in_ready = '1';
+    for i in 0 to K_PACKET_DATA'length-1 loop
+      data_in <= K_PACKET_DATA(pkt_idx);
+      if(i = K_PACKET_DATA'length-1) then
+        data_in_last <= '1';
+      else
+        data_in_last <= '0';
+      end if;
+      wait until rising_edge(clk) and data_in_ready = '1';
+      pkt_idx := pkt_idx+1;
+    end loop;
 
     data_in       <= (others => '0');
     data_in_valid <= '0';

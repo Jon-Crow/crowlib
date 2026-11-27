@@ -123,7 +123,7 @@ package body sim_pkg is
     variable read_byte : t_byte;
     variable read_ok   : boolean;
     variable idx       : natural := 0;
-    variable bytes     : t_byte_arr(0 to f_hex_file_count_bytes(file_name));
+    variable bytes     : t_byte_arr(0 to f_hex_file_count_bytes(file_name)-1);
   begin
 
     file_open(hex_file, file_name, read_mode);

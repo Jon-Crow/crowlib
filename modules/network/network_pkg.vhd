@@ -21,6 +21,8 @@ package network_pkg is
 
   subtype t_eth2_type is std_logic_vector(K_ETH2_TYPE_WIDTH-1 downto 0);
 
+  constant K_ETH2_TYPE_IPV4 : t_eth2_type := x"0800";
+
   type t_eth2_header is record
     dst_addr : t_mac_addr;
     src_addr : t_mac_addr;
@@ -68,6 +70,8 @@ package network_pkg is
   subtype t_ipv4_ttl       is std_logic_vector(K_IPV4_TIME_TO_LIVE_WIDTH-1    downto 0);
   subtype t_ipv4_protocol  is std_logic_vector(K_IPV4_PROTOCOL_WIDTH-1        downto 0);
   subtype t_ipv4_checksum  is std_logic_vector(K_IPV4_CHECKSUM_WIDTH-1        downto 0);
+
+  constant K_IPV4_PROTOCOL_UDP : t_ipv4_protocol := x"11";
 
   type t_ipv4_header is record
     version   : t_ipv4_version;
@@ -158,6 +162,7 @@ package network_pkg is
   constant K_DHCP_CLIENT_ADDRESS_WIDTH          : natural := 128;
   constant K_DHCP_SERVER_HOST_NAME_WIDTH        : natural := 512;
   constant K_DHCP_BOOT_FILE_NAME_WIDTH          : natural := 1024;
+  constant K_DHCP_MAGIC_COOKIE_WIDTH            : natural := 32;
 
   subtype t_dhcp_msg_type    is std_logic_vector(K_DHCP_MESSAGE_TYPE_WIDTH-1            downto 0);
   subtype t_dhcp_hw_type     is std_logic_vector(K_DHCP_HARDWARE_TYPE_WIDTH-1           downto 0);
@@ -169,6 +174,12 @@ package network_pkg is
   subtype t_dhcp_client_addr is std_logic_vector(K_DHCP_CLIENT_ADDRESS_WIDTH-1          downto 0);
   subtype t_dhcp_server_name is std_logic_vector(K_DHCP_SERVER_HOST_NAME_WIDTH-1        downto 0);
   subtype t_dhcp_boot_name   is std_logic_vector(K_DHCP_BOOT_FILE_NAME_WIDTH-1          downto 0);
+  subtype t_dhcp_cookie      is std_logic_vector(K_DHCP_MAGIC_COOKIE_WIDTH-1            downto 0);
+
+  subtype R_DHCP_CLIENT_ADDRESS_MAC     is natural range K_DHCP_CLIENT_ADDRESS_WIDTH-1                     downto K_DHCP_CLIENT_ADDRESS_WIDTH-K_MAC_ADDRESS_WIDTH;
+  subtype R_DHCP_CLIENT_ADDRESS_MAC_PAD is natural range K_DHCP_CLIENT_ADDRESS_WIDTH-K_MAC_ADDRESS_WIDTH-1 downto 0;
+
+  constant K_DHCP_MAGIC_COOKIE_DEFAULT : t_dhcp_cookie := x"63825363";
 
   type t_dhcp_header is record
     msg_type    : t_dhcp_msg_type;
@@ -185,9 +196,13 @@ package network_pkg is
     client_addr : t_dhcp_client_addr;
     server_name : t_dhcp_server_name;
     boot_name   : t_dhcp_boot_name;
+    cookie      : t_dhcp_cookie;
   end record t_dhcp_header;
 
-  constant K_DHCP_HEADER_DEFAULT : t_dhcp_header := (others => (others => '0'));
+  constant K_DHCP_HEADER_DEFAULT : t_dhcp_header := (
+    cookie => K_DHCP_MAGIC_COOKIE_DEFAULT,
+    others => (others => '0')
+  );
 
   constant K_DHCP_HEADER_WIDTH : natural := K_DHCP_MESSAGE_TYPE_WIDTH            +
                                             K_DHCP_HARDWARE_TYPE_WIDTH           +
@@ -199,7 +214,8 @@ package network_pkg is
                                             4*K_IP_ADDRESS_WIDTH                 +
                                             K_DHCP_CLIENT_ADDRESS_WIDTH          +
                                             K_DHCP_SERVER_HOST_NAME_WIDTH        +
-                                            K_DHCP_BOOT_FILE_NAME_WIDTH;
+                                            K_DHCP_BOOT_FILE_NAME_WIDTH          +
+                                            K_DHCP_MAGIC_COOKIE_WIDTH;
   constant K_DHCP_HEADER_BYTES : natural := K_DHCP_HEADER_WIDTH/K_BYTE_WIDTH;
 
   subtype t_dhcp_header_slv is std_logic_vector(K_DHCP_HEADER_WIDTH-1 downto 0);
@@ -369,7 +385,8 @@ package body network_pkg is
            hdr.relay_ip    &
            hdr.client_addr &
            hdr.server_name &
-           hdr.boot_name;
+           hdr.boot_name   &
+           hdr.cookie;
   end function f_dhcp_header_to_slv;
 
   function f_slv_to_dhcp_header(
@@ -378,6 +395,9 @@ package body network_pkg is
     variable hdr : t_dhcp_header := K_DHCP_HEADER_DEFAULT;
     variable idx : natural       := 0;
   begin
+    hdr.cookie := slv(idx+K_DHCP_MAGIC_COOKIE_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_MAGIC_COOKIE_WIDTH;
+
     hdr.boot_name := slv(idx+K_DHCP_BOOT_FILE_NAME_WIDTH-1 downto idx);
     idx := idx + K_DHCP_BOOT_FILE_NAME_WIDTH;
 
