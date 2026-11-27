@@ -4,9 +4,13 @@ library ieee;
   use ieee.math_real.all;
 library crowlib;
   use crowlib.common_pkg.all;
+use std.textio.all;
 
 package sim_pkg is
 
+  --------------------------------------------------------------------------------
+  -- Randomization
+  --------------------------------------------------------------------------------
   type t_random is protected
 
     procedure set_seed (
@@ -20,10 +24,24 @@ package sim_pkg is
   
   end protected t_random;
 
+  --------------------------------------------------------------------------------
+  -- File I/O
+  --------------------------------------------------------------------------------
+  impure function f_hex_file_count_bytes(
+    file_name : string
+  ) return natural;
+
+  impure function f_hex_file_read(
+    file_name : string
+  ) return t_byte_arr;
+
 end package sim_pkg;
 
 package body sim_pkg is
 
+  --------------------------------------------------------------------------------
+  -- Randomization
+  --------------------------------------------------------------------------------
   type t_random is protected body
 
     variable lfsr : t_dword := (others => '0');
@@ -68,5 +86,60 @@ package body sim_pkg is
     end function get_next_real;
 
   end protected body t_random;
+
+  --------------------------------------------------------------------------------
+  -- File I/O
+  --------------------------------------------------------------------------------
+  impure function f_hex_file_count_bytes(
+    file_name : string
+  ) return natural is
+    file     hex_file  : text;
+    variable read_line : line;
+    variable read_byte : t_byte;
+    variable read_ok   : boolean;
+    variable count     : natural := 0;
+  begin
+
+    file_open(hex_file, file_name, read_mode);
+    while not endfile(hex_file) loop
+      readline(hex_file, read_line);
+      loop
+        hread(read_line, read_byte, read_ok);
+        exit when not read_ok;
+        count := count+1;
+      end loop;
+    end loop;
+    file_close(hex_file);
+
+    return count;
+
+  end function f_hex_file_count_bytes;
+
+  impure function f_hex_file_read(
+    file_name : string
+  ) return t_byte_arr is
+    file     hex_file  : text;
+    variable read_line : line;
+    variable read_byte : t_byte;
+    variable read_ok   : boolean;
+    variable idx       : natural := 0;
+    variable bytes     : t_byte_arr(0 to f_hex_file_count_bytes(file_name));
+  begin
+
+    file_open(hex_file, file_name, read_mode);
+    while not endfile(hex_file) loop
+      readline(hex_file, read_line);
+      loop
+        hread(read_line, read_byte, read_ok);
+        exit when not read_ok;
+        bytes(idx) := read_byte;
+        idx := idx+1;
+      end loop;
+    end loop;
+    file_close(hex_file);
+
+    return bytes;
+
+  end function f_hex_file_read;
 
 end package body sim_pkg;

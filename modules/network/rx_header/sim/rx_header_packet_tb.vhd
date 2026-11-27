@@ -16,6 +16,8 @@ end entity rx_header_packet_tb;
 
 architecture rx_header_packet_tb_arch of rx_header_packet_tb is
 
+  constant K_PACKET_DATA : t_byte_arr := f_hex_file_read(G_INPUT_FILE);
+
   signal clk                 : std_logic;
   signal rst                 : std_logic;
 
@@ -48,18 +50,7 @@ begin
   udp_data_out_ready <= '1';
 
   process
-  begin
-    for i in 0 to 1999 loop
-      wait until rising_edge(clk);
-    end loop;
-    finish;
-  end process;
-
-  process
-    file     pkt_file  : text open read_mode is G_INPUT_FILE;
-    variable read_line : line;
-    variable read_byte : t_byte;
-    variable read_ok   : boolean;
+    variable pkt_idx : natural := 0;
   begin
     wait until falling_edge(rst);
 
@@ -73,22 +64,22 @@ begin
 
     data_in_valid <= '1';
 
-    while not endfile(pkt_file) loop
-      readline(pkt_file, read_line);
-      hread(read_line, read_byte, read_ok);
-      next when not read_ok;
-
-      data_in <= read_byte;
-      if(endfile(pkt_file)) then
+    for i in 0 to K_PACKET_DATA'length-1 loop
+      data_in <= K_PACKET_DATA(pkt_idx);
+      if(i = K_PACKET_DATA'length-1) then
         data_in_last <= '1';
       else
         data_in_last <= '0';
       end if;
-
       wait until rising_edge(clk) and data_in_ready = '1';
+      pkt_idx := pkt_idx+1;
     end loop;
 
+    data_in       <= (others => '0');
     data_in_valid <= '0';
+    data_in_last  <= '0';
+
+    wait until rising_edge(clk) and udp_data_out_valid = '1' and udp_data_out_last = '1';
 
     for i in 0 to 31 loop
       wait until rising_edge(clk);
