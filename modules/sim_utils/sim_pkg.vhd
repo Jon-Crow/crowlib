@@ -1,6 +1,7 @@
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
+  use ieee.math_real.all;
 library crowlib;
   use crowlib.common_pkg.all;
 
@@ -12,9 +13,10 @@ package sim_pkg is
       seed : t_dword
     );
 
-    impure function get_next     return t_dword;
-    impure function get_next_uns return t_dword_uns;
-    impure function get_next_sgn return t_dword_sgn;
+    impure function get_next      return t_dword;
+    impure function get_next_uns  return t_dword_uns;
+    impure function get_next_sgn  return t_dword_sgn;
+    impure function get_next_real return real;
   
   end protected t_random;
 
@@ -29,8 +31,12 @@ package body sim_pkg is
     procedure set_seed (
       seed : t_dword
     ) is
+      variable prime : t_dword := (others => '0');
     begin
       lfsr := seed;
+      for i in 0 to 31 loop
+        prime := get_next;
+      end loop;
     end procedure set_seed;
 
     impure function get_next return t_dword is
@@ -52,6 +58,14 @@ package body sim_pkg is
     begin
       return signed(get_next);
     end function get_next_sgn;
+
+    impure function get_next_real return real is
+      variable rand     : t_word_uns := (others => '0');
+      variable rand_max : t_word_uns := (others => '1');
+    begin
+      rand := get_next_uns(K_WORD_WIDTH-1 downto 0);
+      return real(to_integer(rand))/real(to_integer(rand_max));
+    end function get_next_real;
 
   end protected body t_random;
 

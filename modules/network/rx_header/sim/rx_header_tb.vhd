@@ -32,8 +32,6 @@ architecture rx_header_tb_arch of rx_header_tb is
 
 begin
 
-  data_out_ready <= '1';
-
   process
     variable rand       : t_random;
     variable bytes_sent : natural := 0;
@@ -42,14 +40,22 @@ begin
 
     wait until falling_edge(rst);
 
+    data_out_ready <= '1';
+
     for i in 0 to 31 loop
       wait until rising_edge(clk);
     end loop;
 
     data_in       <= rand.get_next(K_BYTE_WIDTH-1 downto 0);
     data_in_valid <= '1';
-    
+
     while bytes_sent < G_HEADER_BYTES + 16 loop
+
+      if(rand.get_next_real < 0.5) then
+        data_out_ready <= '1';
+      else
+        data_out_ready <= '0';
+      end if;
       
       if(bytes_sent = G_HEADER_BYTES+15) then
         data_in_last <= '1';

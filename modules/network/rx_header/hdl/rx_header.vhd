@@ -42,10 +42,12 @@ architecture rx_header_arch of rx_header is
     S_PAYLOAD
   );
 
+  signal data_in_d         : t_byte;
   signal data_in_q         : t_byte;
+  signal data_in_valid_d   : std_logic;
   signal data_in_valid_q   : std_logic;
+  signal data_in_last_d    : std_logic;
   signal data_in_last_q    : std_logic;
-  signal data_in_ready_q   : std_logic;
 
   signal data_in_ready_int : std_logic;
 
@@ -61,6 +63,20 @@ begin
   data_in_ready <= data_in_ready_int;
 
   header_out <= header_q;
+
+  c_data_in : process(all)
+  begin
+    data_in_d       <= data_in_q;
+    data_in_valid_d <= data_in_valid_q;
+    data_in_last_d  <= data_in_last_q;
+
+    if(data_in_ready_int = '1') then
+      data_in_d       <= data_in;
+      data_in_valid_d <= data_in_valid;
+      data_in_last_d  <= data_in_last;
+    end if;
+
+  end process c_data_in;
 
   c_fsm : process(all)
   begin
@@ -89,7 +105,7 @@ begin
         data_in_ready_int <= '1';
       
       when S_PAYLOAD =>
-        if(data_in_last_q = '1' and data_in_valid_q = '1' and data_in_ready_q = '1') then
+        if(data_in_last_q = '1' and data_in_valid_q = '1') then
           state_d <= S_HEADER;
         end if;
 
@@ -107,19 +123,20 @@ begin
     if(rising_edge(clk)) then
       if(rst = '1') then
 
-        state_q    <= S_HEADER;
-        byte_cnt_q <= (others => '0');
+        data_in_valid_q <= '0';
+
+        state_q         <= S_HEADER;
+        byte_cnt_q      <= (others => '0');
 
       else
 
-        data_in_q       <= data_in;
-        data_in_valid_q <= data_in_valid;
-        data_in_last_q  <= data_in_last;
-        data_in_ready_q <= data_in_ready_int;
+        data_in_q       <= data_in_d;
+        data_in_valid_q <= data_in_valid_d;
+        data_in_last_q  <= data_in_last_d;
 
-        state_q    <= state_d;
-        byte_cnt_q <= byte_cnt_d;
-        header_q   <= header_d;
+        state_q         <= state_d;
+        byte_cnt_q      <= byte_cnt_d;
+        header_q        <= header_d;
 
       end if;
     end if;
