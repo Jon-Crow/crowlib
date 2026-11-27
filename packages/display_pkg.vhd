@@ -265,6 +265,8 @@ package display_pkg is
   constant  K_KEY_LHYPER                 : natural := 16#20000006#;
   constant  K_KEY_RHYPER                 : natural := 16#20000007#;
 
+  constant K_DEFAULT_DISPLAY_KEYS : t_nat_array(0 to 0) := (0 => K_KEY_ESCAPE);
+
   type t_color is record
     r : t_byte_uns;
     g : t_byte_uns;

@@ -9,15 +9,18 @@
 #define TARGET_FPS (60)
 #define FRAME_MS   (1000 / TARGET_FPS)
 
-static SDL_Window *win = NULL;
-static SDL_Renderer *rend = NULL;
-static SDL_Texture *tx = NULL;
-static vpiHandle sig_sim_display = NULL;
-static vpiHandle sig_clk = NULL;
-static vpiHandle sig_update = NULL;
-static vpiHandle sig_px = NULL;
-static int disp_w = 0;
-static int disp_h = 0;
+static SDL_Window   *win            = NULL;
+static SDL_Renderer *rend           = NULL;
+static SDL_Texture  *tx             = NULL;
+static vpiHandle    sig_sim_display = NULL;
+static vpiHandle    sig_clk         = NULL;
+static vpiHandle    sig_update      = NULL;
+static vpiHandle    sig_px          = NULL;
+static vpiHandle    sig_keys        = NULL;
+static int          disp_w          = 0;
+static int          disp_h          = 0;
+static int          key_count       = 0;
+static int          *keys           = NULL;
 
 static int scope_has_net(vpiHandle scope, const char *net_name)
 {
@@ -86,6 +89,19 @@ static Uint32 px_to_color(const char *px)
   return clr;
 }
 
+static void set_key(int idx, int val)
+{
+  if(idx < 0 || idx >= key_count)
+    return;
+
+  s_vpi_value keys_val = { .format = vpiBinStrVal };
+  vpi_get_value(sig_keys, &keys_val);
+  
+  keys_val.value.str[idx] = val ? '1' : '0';
+
+  vpi_put_value(sig_keys, &keys_val, NULL, vpiNoDelay);
+}
+
 static PLI_INT32 on_clock_edge(p_cb_data cb_data)
 {
   static Uint64 last_frame = 0;
@@ -137,16 +153,43 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
       SDL_RenderClear(rend);
       SDL_RenderTexture(rend, tx, NULL, NULL);
       SDL_RenderPresent(rend);
+    }
 
-      SDL_Event e;
-      while(SDL_PollEvent(&e))
+    SDL_Event e;
+    while(SDL_PollEvent(&e))
+    {
+      switch(e.type)
       {
-        if(e.type == SDL_EVENT_QUIT)
-        {
+        case SDL_EVENT_QUIT:
           s_vpi_value val = { .format = vpiBinStrVal };
           val.value.str = "0";
           vpi_put_value(sig_sim_display, &val, NULL, vpiNoDelay);
-        }
+          break;
+        
+        case SDL_EVENT_KEY_DOWN:
+          if(!e.key.repeat)
+          {
+            for(int i = 0; i < key_count; i++)
+            {
+              if(e.key.key == keys[i])
+              {
+                vpi_printf("Key %0d was pressed\n", e.key.key);
+                set_key(i, 1);
+              }
+            }
+          }
+          break;
+        
+        case SDL_EVENT_KEY_UP:
+          if(!e.key.repeat)
+          {
+            for(int i = 0; i < key_count; i++)
+            {
+              if(e.key.key == keys[i])
+                set_key(i, 0);
+            }
+          }
+          break;
       }
     }
   }
@@ -174,8 +217,16 @@ static PLI_INT32 on_start(p_cb_data cb)
   sig_update = vpi_handle_by_name(path, NULL);
   snprintf(path, sizeof(path), "%s.vpi_px", vpi_get_str(vpiFullName, disp_inst));
   sig_px = vpi_handle_by_name(path, NULL);
+  snprintf(path, sizeof(path), "%s.keys", vpi_get_str(vpiFullName, disp_inst));
+  sig_keys = vpi_handle_by_name(path, NULL);
 
-  if(sig_sim_display == NULL || sig_clk == NULL || sig_update == NULL || sig_px == NULL)
+  if(
+    sig_sim_display == NULL || 
+    sig_clk         == NULL || 
+    sig_update      == NULL || 
+    sig_px          == NULL ||
+    sig_keys        == NULL
+  )
   {
     vpi_printf("COuld not find all sim_display signals.\n");
     return -1;
@@ -185,6 +236,42 @@ static PLI_INT32 on_start(p_cb_data cb)
   disp_h = 0;
   while(vpi_handle_by_index(sig_px, disp_h) != NULL)
     disp_h++;
+
+  vpi_printf("Screen size: %0dx%0d\n", disp_w, disp_h);
+
+  snprintf(path, sizeof(path), "%s.key_vals", vpi_get_str(vpiFullName, disp_inst));
+  vpiHandle gen_keys = vpi_handle_by_name(path, NULL);
+  
+  if(gen_keys == NULL)
+  {
+    vpi_printf("Could not find key_vals.\n");
+    return -1;
+  }
+
+  key_count = (int)vpi_get(vpiSize, sig_keys);
+
+  keys = malloc(key_count * sizeof(int));
+  if(keys == NULL)
+  {
+    vpi_printf("Failed to allocate key array.\n");
+    return -1;
+  }
+
+  vpi_printf("Listening to %0d keys:\n", key_count);
+  for(int i = 0; i < key_count; i++)
+  {
+    vpiHandle key = vpi_handle_by_index(gen_keys, i);
+    if(key == NULL)
+    {
+      vpi_printf("Retrieving index %0d from key array failed.\n", i);
+      return -1;
+    }
+
+    s_vpi_value key_val = { .format = vpiIntVal };
+    vpi_get_value(key, &key_val);
+    keys[i] = key_val.value.integer;
+    vpi_printf("\t%0d\n", keys[i]);
+  }
 
   add_cb(cbValueChange, on_clock_edge, sig_clk, NULL);
 

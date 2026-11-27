@@ -1,5 +1,6 @@
 library ieee;
   use ieee.std_logic_1164.all;
+  use ieee.numeric_std.all;
 library crowlib;
   use crowlib.common_pkg.all;
   use crowlib.display_pkg.all;
@@ -7,15 +8,18 @@ use std.env.finish;
 
 entity sim_display is
   generic (
-    G_WIDTH  : positive := 256;
-    G_HEIGHT : positive := 256
+    G_WIDTH  : positive    := 256;
+    G_HEIGHT : positive    := 256;
+    G_KEYS   : t_nat_array := K_DEFAULT_DISPLAY_KEYS
   );
   port (
     clk    : in  std_logic;
     rst    : in  std_logic;
 
     px     : in  t_color_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1);
-    update : in  std_logic
+    update : in  std_logic;
+
+    keys   : out std_logic_vector(G_KEYS'length-1 downto 0)
   );
 end entity sim_display;
 
@@ -24,6 +28,17 @@ architecture sim_display_arch of sim_display is
   subtype t_row is std_logic_vector(G_WIDTH*K_COLOR_WIDTH-1 downto 0);
 
   type t_screen is array (0 to G_HEIGHT-1) of t_row;
+
+  function f_keys_to_dwords return t_dword_arr is
+    variable key_dwords : t_dword_arr(0 to G_KEYS'length-1) := (others => (others => '0'));
+  begin
+    for i in 0 to G_KEYS'length-1 loop
+      key_dwords(i) := std_logic_vector(to_unsigned(G_KEYS(i), K_DWORD_WIDTH));
+    end loop;
+    return key_dwords;
+  end function f_keys_to_dwords;
+
+  signal key_vals : t_dword_arr(0 to G_KEYS'length-1) := f_keys_to_dwords;
 
   signal px_d     : t_color_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1);
   signal px_q     : t_color_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1);
@@ -34,6 +49,12 @@ architecture sim_display_arch of sim_display is
   signal vpi_tag_sim_display : std_logic := '1';
 
 begin
+
+  process
+  begin
+    keys <= (others => '0');
+    wait;
+  end process;
 
   process
   begin
