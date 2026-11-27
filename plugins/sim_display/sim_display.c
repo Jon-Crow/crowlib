@@ -77,13 +77,13 @@ static void add_cb(PLI_INT32 reason, PLI_INT32 (*fn)(p_cb_data), vpiHandle obj, 
 static Uint32 px_to_color(const char *px)
 {
   int clr = 0;
-  for(int i = 0; i < 32; i++)
+  for(int i = 0; i < 24; i++)
   {
     clr = clr << 1;
     if(px[i] == '1' || px[i] == 'H')
       clr |= 1;
   }
-  return clr >> 8; //Drop alpha
+  return clr;
 }
 
 static PLI_INT32 on_clock_edge(p_cb_data cb_data)
@@ -127,7 +127,7 @@ static PLI_INT32 on_clock_edge(p_cb_data cb_data)
 
           Uint32 *dest = (Uint32*)((Uint8*)px + r*pitch);
           for(int c = 0; c < disp_w; c++)
-            dest[c] = px_to_color(&row_str[(disp_w - 1 - c) * 32]);
+            dest[c] = px_to_color(&row_str[(disp_w - 1 - c) * 24]);
         }
 
         unlock:
@@ -181,7 +181,7 @@ static PLI_INT32 on_start(p_cb_data cb)
     return -1;
   }
 
-  disp_w = vpi_get(vpiSize, vpi_handle_by_index(sig_px, 0)) / 32;
+  disp_w = vpi_get(vpiSize, vpi_handle_by_index(sig_px, 0)) / 24;
   disp_h = 0;
   while(vpi_handle_by_index(sig_px, disp_h) != NULL)
     disp_h++;

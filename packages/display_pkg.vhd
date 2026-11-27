@@ -361,9 +361,9 @@ package body display_pkg is
   ) return t_color is
     variable clr : t_color := K_COLOR_DEFAULT;
   begin
-    clr.r := to_unsigned(integer(round(clr_real.r)), K_BYTE_WIDTH);
+    clr.b := to_unsigned(integer(round(clr_real.r)), K_BYTE_WIDTH);
     clr.g := to_unsigned(integer(round(clr_real.g)), K_BYTE_WIDTH);
-    clr.b := to_unsigned(integer(round(clr_real.b)), K_BYTE_WIDTH);
+    clr.r := to_unsigned(integer(round(clr_real.b)), K_BYTE_WIDTH);
     return clr;
   end function f_color_real_to_color;
 
