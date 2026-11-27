@@ -109,6 +109,38 @@ package network_pkg is
     slv : t_ipv4_header_slv
   ) return t_ipv4_header;
 
+  --------------------------------------------------------------------------------
+  -- UDP
+  --------------------------------------------------------------------------------
+  constant K_UDP_LENGTH_WIDTH   : natural := 16;
+  constant K_UDP_CHECKSUM_WIDTH : natural := 16;
+
+  subtype t_udp_length   is std_logic_vector(K_UDP_LENGTH_WIDTH-1   downto 0);
+  subtype t_udp_checksum is std_logic_vector(K_UDP_CHECKSUM_WIDTH-1 downto 0);
+
+  type t_udp_header is record
+    src_port : t_net_port;
+    dst_port : t_net_port;
+    length   : t_udp_length;
+    checksum : t_udp_checksum;
+  end record t_udp_header;
+
+  constant K_UDP_HEADER_DEFAULT : t_udp_header := (others => (others => '0'));
+
+  constant K_UDP_HEADER_LENGTH : natural := K_UDP_LENGTH_WIDTH   +
+                                            K_UDP_CHECKSUM_WIDTH +
+                                            2*K_NET_PORT_WIDTH;
+
+  subtype t_udp_header_slv is std_logic_vector(K_UDP_HEADER_LENGTH-1 downto 0);
+
+  function f_udp_header_to_slv(
+    hdr : t_udp_header
+  ) return t_udp_header_slv;
+
+  function f_slv_to_udp_header(
+    slv : t_udp_header_slv
+  ) return t_udp_header;
+
 end package network_pkg;
 
 package body network_pkg is
@@ -129,10 +161,16 @@ package body network_pkg is
     slv : t_eth2_header_slv
   ) return t_eth2_header is
     variable hdr : t_eth2_header := K_ETH2_HEADER_DEFAULT;
+    variable idx : natural       := 0;
   begin
-    hdr.eth_type := slv(K_ETH2_TYPE_WIDTH-1 downto 0);
-    hdr.src_addr := slv(K_MAC_ADDRESS_WIDTH+K_ETH2_TYPE_WIDTH-1 downto K_ETH2_TYPE_WIDTH);
-    hdr.dst_addr := slv(2*K_MAC_ADDRESS_WIDTH+K_ETH2_TYPE_WIDTH-1 downto K_MAC_ADDRESS_WIDTH+K_ETH2_TYPE_WIDTH);
+    hdr.eth_type := slv(idx+K_ETH2_TYPE_WIDTH-1 downto idx);
+    idx := idx + K_ETH2_TYPE_WIDTH;
+
+    hdr.src_addr := slv(idx+K_MAC_ADDRESS_WIDTH-1 downto idx);
+    idx := idx + K_MAC_ADDRESS_WIDTH;
+
+    hdr.dst_addr := slv(idx+K_MAC_ADDRESS_WIDTH-1 downto idx);
+
     return hdr;
   end function f_slv_to_eth2_header;
 
@@ -204,5 +242,39 @@ package body network_pkg is
 
     return hdr;
   end function f_slv_to_ipv4_header;
+
+
+  --------------------------------------------------------------------------------
+  -- UDP
+  --------------------------------------------------------------------------------
+  function f_udp_header_to_slv(
+    hdr : t_udp_header
+  ) return t_udp_header_slv is
+  begin
+    return hdr.src_port &
+           hdr.dst_port &
+           hdr.length   &
+           hdr.checksum;
+  end function f_udp_header_to_slv;
+
+  function f_slv_to_udp_header(
+    slv : t_udp_header_slv
+  ) return t_udp_header is
+    variable hdr : t_udp_header := K_UDP_HEADER_DEFAULT;
+    variable idx : natural      := 0;
+  begin
+    hdr.checksum := slv(idx+K_UDP_CHECKSUM_WIDTH-1 downto idx);
+    idx := idx + K_UDP_CHECKSUM_WIDTH;
+
+    hdr.length := slv(idx+K_UDP_LENGTH_WIDTH-1 downto idx);
+    idx := idx + K_UDP_LENGTH_WIDTH;
+
+    hdr.dst_port := slv(idx+K_NET_PORT_WIDTH-1 downto idx);
+    idx := idx + K_NET_PORT_WIDTH;
+
+    hdr.src_port := slv(idx+K_NET_PORT_WIDTH-1 downto idx);
+
+    return hdr;
+  end function f_slv_to_udp_header;
 
 end package body network_pkg;
