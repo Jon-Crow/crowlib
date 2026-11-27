@@ -19,16 +19,18 @@ entity vga_master is
     G_V_BACK_PORCH  : positive              := 33
   );
   port (
-    clk : in  std_logic;
-    rst : in  std_logic;
+    clk    : in  std_logic;
+    rst    : in  std_logic;
 
-    px  : in  t_color_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1);
+    px_col : out std_logic_vector(integer(ceil(log2(real(G_WIDTH))))-1 downto 0);
+    px_row : out std_logic_vector(integer(ceil(log2(real(G_HEIGHT))))-1 downto 0);
+    px     : in  t_color;
 
-    r   : out std_logic_vector(G_RGB_WIDTH-1 downto 0);
-    g   : out std_logic_vector(G_RGB_WIDTH-1 downto 0);
-    b   : out std_logic_vector(G_RGB_WIDTH-1 downto 0);
-    hs  : out std_logic;
-    vs  : out std_logic
+    r      : out std_logic_vector(G_RGB_WIDTH-1 downto 0);
+    g      : out std_logic_vector(G_RGB_WIDTH-1 downto 0);
+    b      : out std_logic_vector(G_RGB_WIDTH-1 downto 0);
+    hs     : out std_logic;
+    vs     : out std_logic
   );
 end entity vga_master;
 
@@ -56,25 +58,28 @@ architecture vga_master_arch of vga_master is
   constant K_V_SYNC_FIRST       : t_row_counter := to_unsigned(K_V_SYNC_FIRST_NAT,  K_ROW_COUNTER_WIDTH);
   constant K_V_SYNC_LAST        : t_row_counter := to_unsigned(K_V_SYNC_LAST_NAT,   K_ROW_COUNTER_WIDTH);
 
-  signal px_q      : t_color_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1);
+  signal col_cnt_d  : t_col_counter;
+  signal col_cnt_q  : t_col_counter;
+  signal col_cnt_2q : t_col_counter;
+  signal row_cnt_d  : t_row_counter;
+  signal row_cnt_q  : t_row_counter;
+  signal row_cnt_2q : t_row_counter;
 
-  signal col_cnt_d : t_col_counter;
-  signal col_cnt_q : t_col_counter;
-  signal row_cnt_d : t_row_counter;
-  signal row_cnt_q : t_row_counter;
-
-  signal r_d       : t_rgb;
-  signal r_q       : t_rgb;
-  signal g_d       : t_rgb;
-  signal g_q       : t_rgb;
-  signal b_d       : t_rgb;
-  signal b_q       : t_rgb;
-  signal hs_d      : std_logic;
-  signal hs_q      : std_logic;
-  signal vs_d      : std_logic;
-  signal vs_q      : std_logic;
+  signal r_d        : t_rgb;
+  signal r_q        : t_rgb;
+  signal g_d        : t_rgb;
+  signal g_q        : t_rgb;
+  signal b_d        : t_rgb;
+  signal b_q        : t_rgb;
+  signal hs_d       : std_logic;
+  signal hs_q       : std_logic;
+  signal vs_d       : std_logic;
+  signal vs_q       : std_logic;
 
 begin
+
+  px_col <= std_logic_vector(col_cnt_q);
+  px_row <= std_logic_vector(row_cnt_q);
 
   r  <= r_q;
   g  <= g_q;
@@ -90,17 +95,17 @@ begin
     hs_d <= '0';
     vs_d <= '0';
 
-    if(col_cnt_q < to_unsigned(G_WIDTH, K_COL_COUNTER_WIDTH) and row_cnt_q < to_unsigned(G_HEIGHT, K_ROW_COUNTER_WIDTH)) then
-      r_d <= std_logic_vector(px_q(to_integer(row_cnt_q))(to_integer(col_cnt_q)).r(R_RGB));
-      g_d <= std_logic_vector(px_q(to_integer(row_cnt_q))(to_integer(col_cnt_q)).g(R_RGB));
-      b_d <= std_logic_vector(px_q(to_integer(row_cnt_q))(to_integer(col_cnt_q)).b(R_RGB));
+    if(col_cnt_2q < to_unsigned(G_WIDTH, K_COL_COUNTER_WIDTH) and row_cnt_2q < to_unsigned(G_HEIGHT, K_ROW_COUNTER_WIDTH)) then
+      r_d <= std_logic_vector(px.r(R_RGB));
+      g_d <= std_logic_vector(px.g(R_RGB));
+      b_d <= std_logic_vector(px.b(R_RGB));
     end if;
 
-    if(col_cnt_q >= K_H_SYNC_FIRST and col_cnt_q <= K_H_SYNC_LAST) then
+    if(col_cnt_2q >= K_H_SYNC_FIRST and col_cnt_2q <= K_H_SYNC_LAST) then
       hs_d <= '1';
     end if;
 
-    if(row_cnt_q >= K_V_SYNC_FIRST and row_cnt_q <= K_V_SYNC_LAST) then
+    if(row_cnt_2q >= K_V_SYNC_FIRST and row_cnt_2q <= K_V_SYNC_LAST) then
       vs_d <= '1';
     end if;
   end process c_outputs;
@@ -128,29 +133,29 @@ begin
     if(rising_edge(clk)) then
       if(rst = '1') then
 
-        px_q      <= (others => (others => K_COLOR_DEFAULT));
+        col_cnt_q  <= (others => '0');
+        col_cnt_2q <= (others => '1');
+        row_cnt_q  <= (others => '0');
+        row_cnt_2q <= (others => '1');
 
-        col_cnt_q <= (others => '0');
-        row_cnt_q <= (others => '0');
-
-        r_q       <= (others => '0');
-        g_q       <= (others => '0');
-        b_q       <= (others => '0');
-        hs_q      <= '0';
-        vs_q      <= '0';
+        r_q        <= (others => '0');
+        g_q        <= (others => '0');
+        b_q        <= (others => '0');
+        hs_q       <= '0';
+        vs_q       <= '0';
 
       else
 
-        px_q      <= px;
+        col_cnt_q  <= col_cnt_d;
+        col_cnt_2q <= col_cnt_q;
+        row_cnt_q  <= row_cnt_d;
+        row_cnt_2q <= row_cnt_q;
 
-        col_cnt_q <= col_cnt_d;
-        row_cnt_q <= row_cnt_d;
-
-        r_q       <= r_d;
-        g_q       <= g_d;
-        b_q       <= b_d;
-        hs_q      <= hs_d;
-        vs_q      <= vs_d;
+        r_q        <= r_d;
+        g_q        <= g_d;
+        b_q        <= b_d;
+        hs_q       <= hs_d;
+        vs_q       <= vs_d;
 
       end if;
     end if;

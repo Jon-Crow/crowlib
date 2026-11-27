@@ -24,32 +24,32 @@ end entity vga_master_tb;
 
 architecture vga_master_tb_arch of vga_master_tb is
 
-  signal clk : std_logic;
-  signal rst : std_logic;
+  constant K_COL_IDX_WIDTH : natural := integer(ceil(log2(real(G_WIDTH))));
+  constant K_ROW_IDX_WIDTH : natural := integer(ceil(log2(real(G_HEIGHT))));
 
-  signal px  : t_color_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1) := (others => (others => K_COLOR_DEFAULT));
+  subtype t_col_idx is std_logic_vector(K_COL_IDX_WIDTH-1 downto 0);
+  subtype t_row_idx is std_logic_vector(K_ROW_IDX_WIDTH-1 downto 0);
 
-  signal r   : std_logic_vector(G_RGB_WIDTH-1 downto 0);
-  signal g   : std_logic_vector(G_RGB_WIDTH-1 downto 0);
-  signal b   : std_logic_vector(G_RGB_WIDTH-1 downto 0);
-  signal hs  : std_logic;
-  signal vs  : std_logic;
+  signal clk    : std_logic;
+  signal rst    : std_logic;
+
+  signal px_col : t_col_idx;
+  signal px_row : t_row_idx;
+  signal px     : t_color;
+
+  signal r      : std_logic_vector(G_RGB_WIDTH-1 downto 0);
+  signal g      : std_logic_vector(G_RGB_WIDTH-1 downto 0);
+  signal b      : std_logic_vector(G_RGB_WIDTH-1 downto 0);
+  signal hs     : std_logic;
+  signal vs     : std_logic;
 
 begin
 
-  process
-  begin
-    for row in 0 to G_HEIGHT-1 loop
-      for col in 0 to G_WIDTH-1 loop
-        px(row)(col) <= (
-          r => to_unsigned(col, K_BYTE_WIDTH),
-          g => to_unsigned(row, K_BYTE_WIDTH),
-          b => (others => '0')
-        );
-      end loop;
-    end loop;
-    wait;
-  end process;
+  px <= (
+    r => resize(unsigned(px_col), K_BYTE_WIDTH),
+    g => resize(unsigned(px_row), K_BYTE_WIDTH),
+    b => (others => '0')
+  );
 
   process
   begin
@@ -83,14 +83,16 @@ begin
       G_V_BACK_PORCH  => G_V_BACK_PORCH
     )
     port map (
-      clk => clk,
-      rst => rst,
-      px  => px,
-      r   => r,
-      g   => g,
-      b   => b,
-      hs  => hs,
-      vs  => vs
+      clk    => clk,
+      rst    => rst,
+      px_col => px_col,
+      px_row => px_row,
+      px     => px,
+      r      => r,
+      g      => g,
+      b      => b,
+      hs     => hs,
+      vs     => vs
   );
 
 end architecture vga_master_tb_arch;
