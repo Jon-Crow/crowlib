@@ -115,6 +115,7 @@ begin
 
         data_in_ready_int <= data_out_ready;
 
+      when others => null;
     end case;
   end process c_fsm;
 
