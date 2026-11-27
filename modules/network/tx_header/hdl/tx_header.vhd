@@ -61,6 +61,8 @@ architecture tx_header_arch of tx_header is
 
 begin
 
+  data_in_ready <= data_in_ready_int;
+
   c_data_in : process(all)
   begin
     data_in_d       <= data_in_q;
