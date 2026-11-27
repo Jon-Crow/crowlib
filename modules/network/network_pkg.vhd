@@ -144,6 +144,74 @@ package network_pkg is
     slv : t_udp_header_slv
   ) return t_udp_header;
 
+
+  --------------------------------------------------------------------------------
+  -- DHCP
+  --------------------------------------------------------------------------------
+  constant K_DHCP_MESSAGE_TYPE_WIDTH            : natural := 8;
+  constant K_DHCP_HARDWARE_TYPE_WIDTH           : natural := 8;
+  constant K_DHCP_HARDWARE_ADDRESS_LENGTH_WIDTH : natural := 8;
+  constant K_DHCP_HOPS_WIDTH                    : natural := 8;
+  constant K_DHCP_TRANSACTION_ID_WIDTH          : natural := 32;
+  constant K_DHCP_SECONDS_WIDTH                 : natural := 16;
+  constant K_DHCP_FLAGS_WIDTH                   : natural := 16;
+  constant K_DHCP_CLIENT_ADDRESS_WIDTH          : natural := 128;
+  constant K_DHCP_SERVER_HOST_NAME_WIDTH        : natural := 512;
+  constant K_DHCP_BOOT_FILE_NAME_WIDTH          : natural := 1024;
+
+  subtype t_dhcp_msg_type    is std_logic_vector(K_DHCP_MESSAGE_TYPE_WIDTH-1            downto 0);
+  subtype t_dhcp_hw_type     is std_logic_vector(K_DHCP_HARDWARE_TYPE_WIDTH-1           downto 0);
+  subtype t_dhcp_hw_addr_len is std_logic_vector(K_DHCP_HARDWARE_ADDRESS_LENGTH_WIDTH-1 downto 0);
+  subtype t_dhcp_hops        is std_logic_vector(K_DHCP_HOPS_WIDTH-1                    downto 0);
+  subtype t_dhcp_trans_id    is std_logic_vector(K_DHCP_TRANSACTION_ID_WIDTH-1          downto 0);
+  subtype t_dhcp_secs        is std_logic_vector(K_DHCP_SECONDS_WIDTH-1                 downto 0);
+  subtype t_dhcp_flags       is std_logic_vector(K_DHCP_FLAGS_WIDTH-1                   downto 0);
+  subtype t_dhcp_client_addr is std_logic_vector(K_DHCP_CLIENT_ADDRESS_WIDTH-1          downto 0);
+  subtype t_dhcp_server_name is std_logic_vector(K_DHCP_SERVER_HOST_NAME_WIDTH-1        downto 0);
+  subtype t_dhcp_boot_name   is std_logic_vector(K_DHCP_BOOT_FILE_NAME_WIDTH-1          downto 0);
+
+  type t_dhcp_header is record
+    msg_type    : t_dhcp_msg_type;
+    hw_type     : t_dhcp_hw_type;
+    hw_addr_len : t_dhcp_hw_addr_len;
+    hops        : t_dhcp_hops;
+    trans_id    : t_dhcp_trans_id;
+    secs        : t_dhcp_secs;
+    flags       : t_dhcp_flags;
+    client_ip   : t_ip_addr;
+    your_ip     : t_ip_addr;
+    server_ip   : t_ip_addr;
+    relay_ip    : t_ip_addr;
+    client_addr : t_dhcp_client_addr;
+    server_name : t_dhcp_server_name;
+    boot_name   : t_dhcp_boot_name;
+  end record t_dhcp_header;
+
+  constant K_DHCP_HEADER_DEFAULT : t_dhcp_header := (others => (others => '0'));
+
+  constant K_DHCP_HEADER_WIDTH : natural := K_DHCP_MESSAGE_TYPE_WIDTH            +
+                                            K_DHCP_HARDWARE_TYPE_WIDTH           +
+                                            K_DHCP_HARDWARE_ADDRESS_LENGTH_WIDTH +
+                                            K_DHCP_HOPS_WIDTH                    +
+                                            K_DHCP_TRANSACTION_ID_WIDTH          +
+                                            K_DHCP_SECONDS_WIDTH                 +
+                                            K_DHCP_FLAGS_WIDTH                   +
+                                            4*K_IP_ADDRESS_WIDTH                 +
+                                            K_DHCP_CLIENT_ADDRESS_WIDTH          +
+                                            K_DHCP_SERVER_HOST_NAME_WIDTH        +
+                                            K_DHCP_BOOT_FILE_NAME_WIDTH;
+  constant K_DHCP_HEADER_BYTES : natural := K_DHCP_HEADER_WIDTH/K_BYTE_WIDTH;
+
+  subtype t_dhcp_header_slv is std_logic_vector(K_DHCP_HEADER_WIDTH-1 downto 0);
+
+  function f_dhcp_header_to_slv(
+    hdr : t_dhcp_header
+  ) return t_dhcp_header_slv;
+
+  function f_slv_to_dhcp_header(
+    slv : t_dhcp_header_slv
+  ) return t_dhcp_header;
+
 end package network_pkg;
 
 package body network_pkg is
@@ -279,5 +347,79 @@ package body network_pkg is
 
     return hdr;
   end function f_slv_to_udp_header;
+
+
+  --------------------------------------------------------------------------------
+  -- DHCP
+  --------------------------------------------------------------------------------
+  function f_dhcp_header_to_slv(
+    hdr : t_dhcp_header
+  ) return t_dhcp_header_slv is
+  begin
+    return hdr.msg_type    &
+           hdr.hw_type     &
+           hdr.hw_addr_len &
+           hdr.hops        &
+           hdr.trans_id    &
+           hdr.secs        &
+           hdr.flags       &
+           hdr.client_ip   &
+           hdr.your_ip     &
+           hdr.server_ip   &
+           hdr.relay_ip    &
+           hdr.client_addr &
+           hdr.server_name &
+           hdr.boot_name;
+  end function f_dhcp_header_to_slv;
+
+  function f_slv_to_dhcp_header(
+    slv : t_dhcp_header_slv
+  ) return t_dhcp_header is
+    variable hdr : t_dhcp_header := K_DHCP_HEADER_DEFAULT;
+    variable idx : natural       := 0;
+  begin
+    hdr.boot_name := slv(idx+K_DHCP_BOOT_FILE_NAME_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_BOOT_FILE_NAME_WIDTH;
+
+    hdr.server_name := slv(idx+K_DHCP_SERVER_HOST_NAME_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_SERVER_HOST_NAME_WIDTH;
+
+    hdr.client_addr := slv(idx+K_DHCP_CLIENT_ADDRESS_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_CLIENT_ADDRESS_WIDTH;
+
+    hdr.relay_ip := slv(idx+K_IP_ADDRESS_WIDTH-1 downto idx);
+    idx := idx + K_IP_ADDRESS_WIDTH;
+
+    hdr.server_ip := slv(idx+K_IP_ADDRESS_WIDTH-1 downto idx);
+    idx := idx + K_IP_ADDRESS_WIDTH;
+
+    hdr.your_ip := slv(idx+K_IP_ADDRESS_WIDTH-1 downto idx);
+    idx := idx + K_IP_ADDRESS_WIDTH;
+
+    hdr.client_ip := slv(idx+K_IP_ADDRESS_WIDTH-1 downto idx);
+    idx := idx + K_IP_ADDRESS_WIDTH;
+
+    hdr.flags := slv(idx+K_DHCP_FLAGS_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_FLAGS_WIDTH;
+
+    hdr.secs := slv(idx+K_DHCP_SECONDS_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_SECONDS_WIDTH;
+
+    hdr.trans_id := slv(idx+K_DHCP_TRANSACTION_ID_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_TRANSACTION_ID_WIDTH;
+
+    hdr.hops := slv(idx+K_DHCP_HOPS_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_HOPS_WIDTH;
+
+    hdr.hw_addr_len := slv(idx+K_DHCP_HARDWARE_ADDRESS_LENGTH_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_HARDWARE_ADDRESS_LENGTH_WIDTH;
+
+    hdr.hw_type := slv(idx+K_DHCP_HARDWARE_TYPE_WIDTH-1 downto idx);
+    idx := idx + K_DHCP_HARDWARE_TYPE_WIDTH;
+
+    hdr.msg_type := slv(idx+K_DHCP_MESSAGE_TYPE_WIDTH-1 downto idx);
+
+    return hdr;
+  end function f_slv_to_dhcp_header;
 
 end package body network_pkg;
