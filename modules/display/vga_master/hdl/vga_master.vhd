@@ -91,9 +91,9 @@ begin
     vs_d <= '0';
 
     if(col_cnt_q < to_unsigned(G_WIDTH, K_COL_COUNTER_WIDTH) and row_cnt_q < to_unsigned(G_HEIGHT, K_ROW_COUNTER_WIDTH)) then
-      r_d <= std_logic_vector(px_q(to_integer(col_cnt_q))(to_integer(row_cnt_q)).r(R_RGB));
-      g_d <= std_logic_vector(px_q(to_integer(col_cnt_q))(to_integer(row_cnt_q)).g(R_RGB));
-      b_d <= std_logic_vector(px_q(to_integer(col_cnt_q))(to_integer(row_cnt_q)).b(R_RGB));
+      r_d <= std_logic_vector(px_q(to_integer(row_cnt_q))(to_integer(col_cnt_q)).r(R_RGB));
+      g_d <= std_logic_vector(px_q(to_integer(row_cnt_q))(to_integer(col_cnt_q)).g(R_RGB));
+      b_d <= std_logic_vector(px_q(to_integer(row_cnt_q))(to_integer(col_cnt_q)).b(R_RGB));
     end if;
 
     if(col_cnt_q >= K_H_SYNC_FIRST and col_cnt_q <= K_H_SYNC_LAST) then

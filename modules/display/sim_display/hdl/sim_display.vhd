@@ -57,11 +57,7 @@ begin
     px_d <= px_q;
 
     if(update = '1') then
-      for r in 0 to G_HEIGHT-1 loop
-        for c in 0 to G_WIDTH-1 loop
-          px_d(r)(c) <= f_blend_color(px_q(r)(c), px(r)(c));
-        end loop;
-      end loop;
+      px_d <= px;
     end if;
   end process c_blend;
 

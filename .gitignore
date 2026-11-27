@@ -1,7 +1,7 @@
 *.cf
 *.dll
 *.o
-*.fst
+*.fst*
 *.vpi
 *.ghw
 *.gtkw

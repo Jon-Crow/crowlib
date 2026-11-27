@@ -29,10 +29,31 @@ architecture vga_master_tb_arch of vga_master_tb is
 
   signal px  : t_color_arr_2d(0 to G_HEIGHT-1)(0 to G_WIDTH-1) := (others => (others => K_COLOR_DEFAULT));
 
+  signal r   : std_logic_vector(G_RGB_WIDTH-1 downto 0);
+  signal g   : std_logic_vector(G_RGB_WIDTH-1 downto 0);
+  signal b   : std_logic_vector(G_RGB_WIDTH-1 downto 0);
+  signal hs  : std_logic;
+  signal vs  : std_logic;
+
 begin
 
   process
   begin
+    for row in 0 to G_HEIGHT-1 loop
+      for col in 0 to G_WIDTH-1 loop
+        px(row)(col) <= (
+          r => to_unsigned(col, K_BYTE_WIDTH),
+          g => to_unsigned(row, K_BYTE_WIDTH),
+          b => (others => '0')
+        );
+      end loop;
+    end loop;
+    wait;
+  end process;
+
+  process
+  begin
+    wait until rising_edge(vs);
     for i in 0 to 999 loop
       wait until rising_edge(clk);
     end loop;
@@ -65,11 +86,12 @@ begin
       clk => clk,
       rst => rst,
       px  => px,
-      r   => open,
-      g   => open,
-      b   => open,
-      hs  => open,
-      vs  => open
+      r   => r,
+      g   => g,
+      b   => b,
+      hs  => hs,
+      vs  => vs
   );
 
 end architecture vga_master_tb_arch;
+
