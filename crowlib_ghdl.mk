@@ -23,9 +23,19 @@ analyze::
                                   $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_udp_header.vhd               \
                                   $(CROWLIB_PATH)/modules/network/tx_header/hdl/tx_dhcp_header.vhd
 
-plugins:
+plugin_common:
+	ghdl --vpi-compile $(GCC) -c $(CROWLIB_PATH)/plugins/common.c -o common.o
+
+plugin_display: plugin_common
 	copy /Y "$(subst /,\,$(SDL_PATH)/bin/SDL3.dll)" .
-	ghdl --vpi-compile $(GCC) -I$(SDL_PATH)/include                             \
-                         -c $(CROWLIB_PATH)/plugins/sim_display/sim_display.c \
-                         -o sim_display.o
-	ghdl --vpi-link $(GCC) sim_display.o -L$(SDL_PATH)/lib -lSDL3 -o sim_display.vpi
+	ghdl --vpi-compile $(GCC) -I$(SDL_PATH)/include                                \
+                            -c $(CROWLIB_PATH)/plugins/sim_display/sim_display.c \
+                            -o sim_display.o
+	ghdl --vpi-link $(GCC) common.o sim_display.o -L$(SDL_PATH)/lib -lSDL3 -o sim_display.vpi
+
+plugin_network: plugin_common
+	ghdl --vpi-compile $(GCC) -c $(CROWLIB_PATH)/plugins/sim_network/sim_network.c \
+                            -o sim_network.o
+	ghdl --vpi-link $(GCC) common.o sim_network.o -o sim_network.vpi
+
+plugins: plugin_display plugin_network

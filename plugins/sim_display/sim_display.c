@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <vpi_user.h>
+#include "../common.h"
 
 #include "SDL3/SDL.h"
 
@@ -21,61 +17,6 @@ static int          disp_w          = 0;
 static int          disp_h          = 0;
 static int          key_count       = 0;
 static int          *keys           = NULL;
-
-static int scope_has_net(vpiHandle scope, const char *net_name)
-{
-  vpiHandle iter = vpi_iterate(vpiNet, scope);
-  if (iter == NULL)
-    return 0;
-
-  vpiHandle net;
-  while ((net = vpi_scan(iter)) != NULL)
-  {
-    const char *name = vpi_get_str(vpiName, net);
-    if (name != NULL && SDL_strcasecmp(name, net_name) == 0)
-    {
-      vpi_free_object(iter);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static vpiHandle find_instance_with_net(vpiHandle scope, const char *net_name)
-{
-  vpiHandle iter = (scope == NULL) ? vpi_iterate(vpiModule, NULL) : vpi_iterate(vpiInternalScope, scope);
-  if (iter == NULL)
-    return NULL;
-
-  vpiHandle child;
-  while ((child = vpi_scan(iter)) != NULL)
-  {
-    vpiHandle found = scope_has_net(child, net_name) ? child : find_instance_with_net(child, net_name);
-
-    if (found != NULL)
-    {
-      vpi_free_object(iter);
-      return found;
-    }
-  }
-  return NULL;
-}
-
-static void add_cb(PLI_INT32 reason, PLI_INT32 (*fn)(p_cb_data), vpiHandle obj, PLI_BYTE8 *user_data)
-{
-  static s_vpi_time  cb_time  = { .type   = vpiSuppressTime };
-  static s_vpi_value cb_value = { .format = vpiBinStrVal };
-
-  s_cb_data cb = {0};
-  cb.reason    = reason;
-  cb.cb_rtn    = fn;
-  cb.obj       = obj;
-  cb.time      = &cb_time;
-  cb.value     = &cb_value;
-  cb.user_data = user_data;
-  if (vpi_register_cb(&cb) == NULL)
-    vpi_printf("VPI: failed to register callback %d\n", (int)reason);
-}
 
 static Uint32 px_to_color(const char *px)
 {
